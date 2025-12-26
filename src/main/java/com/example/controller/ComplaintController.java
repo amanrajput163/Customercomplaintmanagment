@@ -54,7 +54,7 @@ public class ComplaintController {
         return ResponseEntity.ok(
             new ApiResponse<>(
                 true,
-                "All complaints fetched successfully",
+                "All complaints fetche successfully",
                 complaints
             )
         );
