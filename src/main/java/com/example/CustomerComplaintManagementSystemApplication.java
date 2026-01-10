@@ -8,7 +8,7 @@ public class CustomerComplaintManagementSystemApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(CustomerComplaintManagementSystemApplication.class, args);
-		System.out.println("softtech");
+		System.out.println("Softtech");
 	}
 
 }

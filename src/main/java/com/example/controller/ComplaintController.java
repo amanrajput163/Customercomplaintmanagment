@@ -1,62 +1,55 @@
 package com.example.controller;
 
-import java.util.List;
+import com.example.entity.Complaint;
+import com.example.entity.User;
+import com.example.repository.ComplaintRepository;
+import com.example.repository.UserRepository;
+import com.example.response.ApiResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import com.example.entity.Complaint;
-import com.example.repository.ComplaintRepository;
-import com.example.response.ApiResponse;
+import jakarta.validation.Valid;
+import java.util.List;
 
 @RestController
 @RequestMapping("/complaints")
+@CrossOrigin("*")
 public class ComplaintController {
 
     @Autowired
     private ComplaintRepository complaintRepository;
 
-   
+    @Autowired
+    private UserRepository userRepository;
+
     @PostMapping
     public ResponseEntity<ApiResponse<Complaint>> createComplaint(
-            @RequestBody Complaint complaint) {
+            @Valid @RequestBody Complaint complaint,
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        if (complaint.getCustomerName() == null ||
-            complaint.getCustomerEmail() == null) {
+        User user = userRepository.findById(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-            return ResponseEntity.badRequest().body(
-                new ApiResponse<>(
-                    false,
-                    "Customer name and email are required",
-                    null
-                )
-            );
-        }
+        complaint.setUser(user);
+        Complaint saved = complaintRepository.save(complaint);
 
-        Complaint savedComplaint = complaintRepository.save(complaint);
-
-        return ResponseEntity.ok(
-            new ApiResponse<>(
-                true,
-                "Complaint created successfully",
-                savedComplaint
-            )
-        );
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(new ApiResponse<>(true, "Complaint created successfully", saved));
     }
 
-   
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Complaint>>> getAllComplaints() {
+    public ResponseEntity<ApiResponse<List<Complaint>>> getUserComplaints(
+            @AuthenticationPrincipal UserDetails userDetails) {
 
-        List<Complaint> complaints = complaintRepository.findAll();
+        User user = userRepository.findById(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("User not found"));
 
-        return ResponseEntity.ok(
-            new ApiResponse<>(
-                true,
-                "All complaints fetche successfully",
-                complaints
-            )
-        );
+        List<Complaint> list = complaintRepository.findByUser(user);
+        return ResponseEntity.ok(new ApiResponse<>(true, "Complaints fetched successfully", list));
     }
 }
