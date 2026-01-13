@@ -25,33 +25,48 @@ public class JwtFilter extends OncePerRequestFilter {
     private UserDetailsService userDetailsService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
             throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
+        String token = null;
         String username = null;
-        String jwt = null;
 
+        // 1. Check if Header has Bearer Token
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            jwt = authHeader.substring(7);
+            token = authHeader.substring(7);
             try {
-                if (jwtUtil.validateToken(jwt)) {
-                    username = jwtUtil.extractUserId(jwt);
-                }
+                username = jwtUtil.extractUsername(token);
             } catch (Exception e) {
-                System.out.println("Invalid JWT token: " + e.getMessage());
+                System.out.println("JWT Error: " + e.getMessage());
             }
         }
 
-        // CRITICAL: Set the authentication context
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+               if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+            
             UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                    userDetails, null, userDetails.getAuthorities());
-            authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            SecurityContextHolder.getContext().setAuthentication(authToken);
+
+            // 3. Token validate 
+            if (jwtUtil.validateToken(token)) {
+                   UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                        userDetails, null, userDetails.getAuthorities());
+                
+                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                
+     
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
         }
 
-        chain.doFilter(request, response);
+        filterChain.doFilter(request, response);
+    }
+
+   
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.startsWith("/auth/") || path.startsWith("/swagger-ui/") || path.startsWith("/v3/api-docs");
     }
 }

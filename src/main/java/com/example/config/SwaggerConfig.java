@@ -1,7 +1,7 @@
 package com.example.config;
 
 import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
@@ -11,17 +11,22 @@ import org.springframework.context.annotation.Configuration;
 public class SwaggerConfig {
 
     @Bean
-    public OpenAPI openAPI() {
+    public OpenAPI customOpenAPI() {
 
-        SecurityScheme jwtScheme = new SecurityScheme()
+        SecurityScheme bearerAuth = new SecurityScheme()
                 .type(SecurityScheme.Type.HTTP)
                 .scheme("bearer")
                 .bearerFormat("JWT");
 
         return new OpenAPI()
-                .components(new Components()
-                        .addSecuritySchemes("bearerAuth", jwtScheme))
-                .addSecurityItem(new SecurityRequirement()
-                        .addList("bearerAuth"));
+                .info(new Info()
+                        .title("Customer Complaint Management API")
+                        .version("1.0")
+                        .description("APIs for customer complaint system"))
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .components(
+                        new io.swagger.v3.oas.models.Components()
+                                .addSecuritySchemes("bearerAuth", bearerAuth)
+                );
     }
 }

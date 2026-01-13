@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import java.util.List;
-
 @RestController
 @RequestMapping("/complaints")
 @CrossOrigin("*")
@@ -28,25 +27,28 @@ public class ComplaintController {
     private UserRepository userRepository;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<Complaint>> createComplaint(
+    public ResponseEntity<?> createComplaint(
             @Valid @RequestBody Complaint complaint,
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        User user = userRepository.findById(userDetails.getUsername())
+        User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
+
         complaint.setUser(user);
+
+    
         Complaint saved = complaintRepository.save(complaint);
 
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(new ApiResponse<>(true, "Complaint created successfully", saved));
     }
-
     @GetMapping
     public ResponseEntity<ApiResponse<List<Complaint>>> getUserComplaints(
             @AuthenticationPrincipal UserDetails userDetails) {
 
-        User user = userRepository.findById(userDetails.getUsername())
+
+        User user = userRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<Complaint> list = complaintRepository.findByUser(user);

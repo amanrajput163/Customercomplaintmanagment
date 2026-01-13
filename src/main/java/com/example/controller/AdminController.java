@@ -1,35 +1,25 @@
 package com.example.controller;
 
-import com.example.entity.Admin;
+
 import com.example.entity.Complaint;
-import com.example.repository.AdminRepository;
 import com.example.repository.ComplaintRepository;
 import com.example.response.ApiResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.validation.Valid;
+//import jakarta.validation.Valid;
 import java.util.List;
 
 @RestController
 @RequestMapping("/admin")
-@PreAuthorize("hasRole('ADMIN')")  // ✅ Admin only
+
 public class AdminController {
 
-    @Autowired
-    private AdminRepository adminRepository;
 
     @Autowired
     private ComplaintRepository complaintRepository;
 
-    @PostMapping("/create")
-    public ResponseEntity<ApiResponse<Admin>> createAdmin(@Valid @RequestBody Admin admin) {
-        Admin savedAdmin = adminRepository.save(admin);
-        return ResponseEntity.ok(new ApiResponse<>(true, "Admin created successfully", savedAdmin));
-    }
+
 
     @GetMapping("/complaints")
     public ResponseEntity<ApiResponse<List<Complaint>>> viewAllComplaints() {
